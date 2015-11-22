@@ -1,2 +1,2 @@
-# build-angularjs 
-# 2
+# build-angularjs tutorial step by step
+
