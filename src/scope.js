@@ -1,6 +1,6 @@
 ﻿'use strict';
 function Scope() {
-    this.$$watchers = [];
+  this.$$watchers = [];
 }
 
-module.exports = Scope;
+module.exports = Scope; 
