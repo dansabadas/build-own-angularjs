@@ -1,2 +1,4 @@
 # build-angularjs tutorial step by step
-step 1
+learn and comprehend AngularJS framework <br/>
+start from scratch
+
