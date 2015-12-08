@@ -2,6 +2,7 @@
 
 var _ = require('lodash');
 var Scope = require('../src/scope');
+console.log('inside scope_spec');
 
 describe("Scope", function () {
   it("can be constructed and used as an object", function () {
@@ -136,6 +137,7 @@ describe("Scope", function () {
       );
       scope.$digest();
       expect(scope.counter).toBe(1);
+      console.log('inside test');
     });
   }); 
 });
