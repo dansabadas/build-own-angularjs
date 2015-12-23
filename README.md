@@ -2,6 +2,7 @@
 learn and comprehend AngularJS framework <br/>
 start from scratch
 
+to start the karma-jshint-runner-tests-environment, just run: npm test
 1. Info about how to setup karma runer-launcher in the browser
 and specific things to set in karma.conf.js:
 http://www.bradoncode.com/blog/2015/05/19/karma-angularjs-testing/
