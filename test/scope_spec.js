@@ -297,7 +297,7 @@ describe("Scope", function () {
       setTimeout(function () {
         expect(scope.counter).toBe(1);
         done();
-      }, 51);
+      }, 52);
     });
   }); 
 });
