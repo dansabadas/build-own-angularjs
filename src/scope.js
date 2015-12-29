@@ -9,75 +9,104 @@ function Scope() {
   this.$$lastDirtyWatch = null;
   this.$$asyncQueue = [];
   this.$$applyAsyncQueue = [];
+  this.$$postDigestQueue = [];
   this.$$phase = null;
   this.$$applyAsyncId = null;
 }
 
 Scope.prototype.$beginPhase = function (phase) {
-    if (this.$$phase) {
-        throw this.$$phase + ' already in progress.';
-    }
-    this.$$phase = phase;
+  if (this.$$phase) {
+    throw this.$$phase + ' already in progress.';
+  }
+  this.$$phase = phase;
 };
+
 Scope.prototype.$clearPhase = function () {
-    this.$$phase = null;
+  this.$$phase = null;
 }; 
 
 Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
-    var watcher = {
-        watchFn: watchFn,
-        listenerFn: listenerFn || function () { },
-        valueEq: !!valueEq,
-        last: initWatchVal
-    };
+  var self = this;
+  var watcher = {
+    watchFn: watchFn,
+    listenerFn: listenerFn || function () { },
+    valueEq: !!valueEq,
+    last: initWatchVal
+  };
 
-    this.$$watchers.push(watcher);
-    this.$$lastDirtyWatch = null;
+  this.$$watchers.unshift(watcher);
+  this.$$lastDirtyWatch = null;
+
+  return function () {
+    var index = self.$$watchers.indexOf(watcher);
+    if (index >= 0) {
+      self.$$watchers.splice(index, 1);
+      self.$$lastDirtyWatch = null;
+    }
+  };
 }; 
 
 Scope.prototype.$$digestOnce = function () {
     var self = this;
     var newValue, oldValue, dirty;
-    _.forEach(this.$$watchers, function (watcher) {
-        newValue = watcher.watchFn(self);
-        oldValue = watcher.last;
-        if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+    _.forEachRight(this.$$watchers, function (watcher) {
+      try {
+        if (watcher) {
+          newValue = watcher.watchFn(self);
+          oldValue = watcher.last;
+          if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
             self.$$lastDirtyWatch = watcher;
             watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
             watcher.listenerFn(newValue,
               (oldValue === initWatchVal ? newValue : oldValue),
               self);
             dirty = true;
-        } else if (self.$$lastDirtyWatch === watcher) {
+          } else if (self.$$lastDirtyWatch === watcher) {
             return false;
+          }
         }
+      } catch (e) {
+        console.error(e);
+      }
     });
     return dirty;
 };
 
 Scope.prototype.$digest = function () {
-    var ttl = 10;
-    var dirty;
-    this.$$lastDirtyWatch = null;
-    this.$beginPhase("$digest");
+  var ttl = 10;
+  var dirty;
+  this.$$lastDirtyWatch = null;
+  this.$beginPhase("$digest");
 
-    if (this.$$applyAsyncId) {
-      clearTimeout(this.$$applyAsyncId);
-      this.$$flushApplyAsync();
+  if (this.$$applyAsyncId) {
+    clearTimeout(this.$$applyAsyncId);
+    this.$$flushApplyAsync();
+  }
+
+  do {
+    while (this.$$asyncQueue.length) {
+      try {
+        var asyncTask = this.$$asyncQueue.shift();
+        asyncTask.scope.$eval(asyncTask.expression);
+      } catch (e) {
+        console.error(e);
+      }
     }
+    dirty = this.$$digestOnce();
+    if ((dirty || this.$$asyncQueue.length) && !(ttl--)) {
+      this.$clearPhase();
+      throw "10 digest iterations reached";
+    }
+  } while (dirty || this.$$asyncQueue.length);
+  this.$clearPhase();
 
-    do {
-        while (this.$$asyncQueue.length) {
-            var asyncTask = this.$$asyncQueue.shift();
-            asyncTask.scope.$eval(asyncTask.expression);
-        }
-        dirty = this.$$digestOnce();
-        if ((dirty || this.$$asyncQueue.length) && !(ttl--)) {
-            this.$clearPhase();
-            throw "10 digest iterations reached";
-        }
-    } while (dirty || this.$$asyncQueue.length);
-    this.$clearPhase();
+  while (this.$$postDigestQueue.length) {
+    try {
+      this.$$postDigestQueue.shift()();
+    } catch (e) {
+      console.error(e);
+    }
+  }
 };
 
 Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
@@ -129,9 +158,17 @@ Scope.prototype.$applyAsync = function (expr) {
 
 Scope.prototype.$$flushApplyAsync = function () {
   while (this.$$applyAsyncQueue.length) {
-    this.$$applyAsyncQueue.shift()();
+    try {
+      this.$$applyAsyncQueue.shift()();
+    } catch (e) {
+      console.error(e);
+    }
   }
   this.$$applyAsyncId = null;
+};
+
+Scope.prototype.$$postDigest = function (fn) {
+  this.$$postDigestQueue.push(fn);
 };
 
 module.exports = Scope;

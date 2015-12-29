@@ -14,4 +14,4 @@ simply run: npm install in NodeJS npm console
 equals function: https://github.com/angular/angular.js/blob/8d4e3fdd31eabadd87db38aa0590253e14791956/src/Angular.js#L812
 deep cppy function https://github.com/angular/angular.js/blob/8d4e3fdd31eabadd87db38aa0590253e14791956/src/Angular.js#L725
 
-arrived at Running Code After A Digest - $$postDigest pg 43
+arrived at Watching Several Changes With One Listener: $watchGroup pg 56
