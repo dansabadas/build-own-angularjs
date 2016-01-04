@@ -756,5 +756,26 @@ describe("Scope", function () {
       expect(child.user.name).toBe('Jill');
       expect(parent.user.name).toBe('Jill');
     });
+    it("does not digest its parent(s)", function () {
+      var parent = new Scope();
+      var child = parent.$new();
+      parent.aValue = 'abc';
+      child.aChildValue = 'def';
+      parent.$watch(
+        function (scope) { return scope.aValue; },
+        function (newValue, oldValue, scope) {
+          scope.aValueWas = newValue;
+        }
+      );
+      child.$watch(
+        function (scope) { return scope.aChildValue; },
+        function (newValue, oldValue, scope) {
+          scope.aChildValueWas = newValue;
+        }
+      );
+      child.$digest();
+      expect(child.aValueWas).toBeUndefined();
+      expect(child.aChildValueWas).toBe('def');
+    });
   });
 });
