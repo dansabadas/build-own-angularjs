@@ -14,4 +14,4 @@ simply run: npm install in NodeJS npm console
 equals function: https://github.com/angular/angular.js/blob/8d4e3fdd31eabadd87db38aa0590253e14791956/src/Angular.js#L812
 deep cppy function https://github.com/angular/angular.js/blob/8d4e3fdd31eabadd87db38aa0590253e14791956/src/Angular.js#L725
 
-arrived at Chapter 3 Watching Collections pg 95
+arrived at Chapter 3 Watching Collections Detecting New Arrays pg 101
