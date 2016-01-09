@@ -86,8 +86,8 @@ Scope.prototype.$digest = function () {
   this.$root.$$lastDirtyWatch = null;
   this.$beginPhase("$digest");
 
-  if (this.$$applyAsyncId) {
-    clearTimeout(this.$$applyAsyncId);
+  if (this.$root.$$applyAsyncId) {
+    clearTimeout(this.$root.$$applyAsyncId);
     this.$$flushApplyAsync();
   }
 
@@ -227,14 +227,36 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
   };
 };
 
-Scope.prototype.$new = function () {
-  var ChildScope = function () { };
-  ChildScope.prototype = this;
-  var child = new ChildScope();
-  this.$$children.push(child);
+Scope.prototype.$new = function (isolated, parent) {
+  var child;
+  parent = parent || this;
+  if (isolated) {
+    child = new Scope();
+    child.$root = parent.$root;
+    child.$$asyncQueue = parent.$$asyncQueue;
+    child.$$postDigestQueue = parent.$$postDigestQueue;
+    child.$$applyAsyncQueue = parent.$$applyAsyncQueue;
+  } else {
+    var ChildScope = function () { };
+    ChildScope.prototype = this;
+    child = new ChildScope();
+  }
+  parent.$$children.push(child);
   child.$$watchers = [];
   child.$$children = [];
+  child.$parent = parent;
   return child;
+};
+
+Scope.prototype.$destroy = function () {
+  if (this.$parent) {
+    var siblings = this.$parent.$$children;
+    var indexOfThis = siblings.indexOf(this);
+    if (indexOfThis >= 0) {
+      siblings.splice(indexOfThis, 1);
+    }
+  }
+  this.$$watchers = null;
 };
 
 //The function invokes fn once for the current scope, and then recursively calls itself on each child.
