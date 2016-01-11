@@ -4,6 +4,32 @@ var _ = require('lodash');
 
 function initWatchVal() { }
 
+function isArrayLike(obj) {
+  if (_.isNull(obj) || _.isUndefined(obj)) {
+    return false;
+  }
+  var length = obj.length;
+  var isNumber = _.isNumber(length);
+  if (!isNumber) {
+    return false;
+  }
+  if (length === 0) {
+    return true;
+  } else if (length > 0) {
+    return (length - 1) in obj;
+  } else {
+    return false;
+  }
+}
+
+//function isArrayLike(obj) {
+//  if (_.isNull(obj) || _.isUndefined(obj)) {
+//    return false;
+//  }
+//  var length = obj.length;
+//  return _.isNumber(length);
+//}
+
 function Scope() {
   this.$$watchers = [];
   this.$$lastDirtyWatch = null;
@@ -275,12 +301,33 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
   var newValue;
   var oldValue;
   var changeCount = 0;
-  var internalWatchFn = function(scope) {
+  var internalWatchFn = function (scope) {
     newValue = watchFn(scope);
-    if (!self.$$areEqual(newValue, oldValue, false)) {
-      changeCount++;
+    if (_.isObject(newValue)) {
+      if (isArrayLike(newValue)) {
+        if (!_.isArray(oldValue)) {
+          changeCount++;
+          oldValue = [];
+        }
+        if (newValue.length !== oldValue.length) {
+          changeCount++;
+          oldValue.length = newValue.length;
+        }
+        _.forEach(newValue, function (newItem, i) {
+          var bothNaN = _.isNaN(newItem) && _.isNaN(oldValue[i]);
+          if (!bothNaN && newItem !== oldValue[i]) {
+            changeCount++;
+            oldValue[i] = newItem;
+          }
+        });
+      } else {
+      }
+    } else {
+      if (!self.$$areEqual(newValue, oldValue, false)) {
+        changeCount++;
+      }
+      oldValue = newValue;
     }
-    oldValue = newValue;
     return changeCount;
   };
   var internalListenerFn = function() {
