@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 var _ = require('lodash');
 
@@ -50,7 +50,7 @@ Scope.prototype.$emit = function (eventName) {
       propagationStopped = true;
     }
   };
-  var listenerArgs = [event].concat(_.rest(arguments));// gives us an array of all the function�s arguments except the first one
+  var listenerArgs = [event].concat(_.rest(arguments)); // gives us an array of all the functions arguments except the first one  
   var scope = this;
   do {
     event.currentScope = scope;
@@ -391,7 +391,7 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
             oldLength++;
             oldValue[key] = newVal;
           }
-        });
+        }); 
         if (oldLength > newLength) {
           changeCount++;
           _.forOwn(oldValue, function (oldVal, key) {
