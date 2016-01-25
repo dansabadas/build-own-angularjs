@@ -48,6 +48,9 @@ Scope.prototype.$emit = function (eventName) {
     targetScope: this,
     stopPropagation: function () {
       propagationStopped = true;
+    },
+    preventDefault: function () {
+      event.defaultPrevented = true;
     }
   };
   var listenerArgs = [event].concat(_.rest(arguments)); // gives us an array of all the functions arguments except the first one  
@@ -62,7 +65,13 @@ Scope.prototype.$emit = function (eventName) {
 };  
 
 Scope.prototype.$broadcast = function (eventName) {
-  var event = { name: eventName, targetScope: this };
+  var event = {
+    name: eventName,
+    targetScope: this,
+    preventDefault: function () {
+      event.defaultPrevented = true;
+    }
+  };
   var listenerArgs = [event].concat(_.rest(arguments));
   this.$$everyScope(function (scope) {
     event.currentScope = scope;
@@ -80,7 +89,11 @@ Scope.prototype.$$fireEventOnScope = function (eventName, listenerArgs) {
     if (listeners[i] === null) {
       listeners.splice(i, 1);
     } else {
-      listeners[i].apply(null, listenerArgs);
+      try {
+        listeners[i].apply(null, listenerArgs);
+      } catch (e) {
+        console.error(e);
+      }
       i++;
     }
   }
@@ -321,6 +334,7 @@ Scope.prototype.$new = function (isolated, parent) {
 };
 
 Scope.prototype.$destroy = function () {
+  this.$broadcast('$destroy');
   if (this.$parent) {
     var siblings = this.$parent.$$children;
     var indexOfThis = siblings.indexOf(this);
@@ -329,6 +343,7 @@ Scope.prototype.$destroy = function () {
     }
   }
   this.$$watchers = null;
+  this.$$listeners = {};
 };
 
 //The function invokes fn once for the current scope, and then recursively calls itself on each child.
