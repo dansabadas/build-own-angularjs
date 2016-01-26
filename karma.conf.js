@@ -9,7 +9,7 @@ module.exports = function (config) {
       'test/**/*.js': ['jshint', 'browserify'],
       'src/**/*.js': ['jshint', 'browserify']
     },
-    browsers: ['PhantomJS' /*'PhantomJS', 'Chrome', 'Chrome_without_security', 'Firefox', 'FirefoxDeveloper', 'FirefoxAurora', 'FirefoxNightly', 'IE'*/],
+    browsers: ['PhantomJS' /*'PhantomJS', 'Chrome', 'Chrome_without_security', 'Firefox', 'FirefoxDeveloper', 'FirefoxAurora', 'FirefoxNightly', 'IE'*/], 
     // you can define custom flags 
     //customLaunchers: {
     //  Chrome_without_security: {

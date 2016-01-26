@@ -1532,4 +1532,4 @@ describe("Scope", function () {
       expect(listener).not.toHaveBeenCalled();
     });
   });
-});
+}); 
