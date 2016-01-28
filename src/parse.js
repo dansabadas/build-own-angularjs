@@ -29,8 +29,15 @@ Lexer.prototype.lex = function (text) {
       this.readNumber();
     } else if (this.ch === '\'' || this.ch === '"') {
       this.readString(this.ch);
+    } else if (this.ch === '[' || this.ch === ']' || this.ch === ',') {
+      this.tokens.push({
+        text: this.ch
+      });
+      this.index++;
     } else if (this.isIdent(this.ch)) {
       this.readIdent();
+    } else if (this.isWhitespace(this.ch)) {
+      this.index++;
     } else {
       throw 'Unexpected next character: ' + this.ch;
     }
@@ -60,6 +67,10 @@ Lexer.prototype.isExpOperator = function (ch) {
 };
 Lexer.prototype.isNumber = function (ch) {
   return '0' <= ch && ch <= '9';
+};
+Lexer.prototype.isWhitespace = function (ch) {
+  return ch === ' ' || ch === '\r' || ch === '\t' ||
+  ch === '\n' || ch === '\v' || ch === '\u00A0';
 };
 Lexer.prototype.readNumber = function () {
   var number = '';
@@ -137,6 +148,8 @@ function AST(lexer) {
 }
 AST.Program = 'Program';
 AST.Literal = 'Literal';
+AST.ArrayExpression = 'ArrayExpression';
+
 AST.prototype.ast = function (text) {
   this.tokens = this.lexer.lex(text);
   return this.program();
@@ -145,19 +158,55 @@ AST.prototype.program = function () {
   return { type: AST.Program, body: this.primary() };
 };
 AST.prototype.primary = function () {
-  if (this.constants.hasOwnProperty(this.tokens[0].text)) {
-    return this.constants[this.tokens[0].text];
+  if (this.expect('[')) {
+    return this.arrayDeclaration();
+  } else if (this.constants.hasOwnProperty(this.tokens[0].text)) {
+    return this.constants[this.consume().text];
   } else {
     return this.constant();
   }
 };
 AST.prototype.constant = function () {
-  return { type: AST.Literal, value: this.tokens[0].value };
+  return { type: AST.Literal, value: this.consume().value };
 };
 AST.prototype.constants = {
   'null': { type: AST.Literal, value: null },
   'true': { type: AST.Literal, value: true },
   'false': { type: AST.Literal, value: false }
+};
+AST.prototype.expect = function (e) {
+  var token = this.peek(e);
+  if (token) {
+    return this.tokens.shift();
+  }
+};
+AST.prototype.arrayDeclaration = function () {
+  var elements = [];
+  if (!this.peek(']')) {
+    do {
+      if (this.peek(']')) {
+        break;
+      }
+      elements.push(this.primary());
+    } while (this.expect(','));
+  }
+  this.consume(']');
+  return { type: AST.ArrayExpression, elements: elements };
+};
+AST.prototype.peek = function (e) {
+  if (this.tokens.length > 0) {
+    var text = this.tokens[0].text;
+    if (text === e || !e) {
+      return this.tokens[0];
+    }
+  }
+};
+AST.prototype.consume = function (e) {
+  var token = this.expect(e);
+  if (!token) {
+    throw 'Unexpected. Expecting: ' + e;
+  }
+  return token;
 };
 
 function ASTCompiler(astBuilder) {
@@ -178,6 +227,11 @@ ASTCompiler.prototype.recurse = function (ast) {
       break;
     case AST.Literal:
       return this.escape(ast.value);
+    case AST.ArrayExpression:
+      var elements = _.map(ast.elements, function (element) {
+        return this.recurse(element);
+      }, this);
+      return '[' + elements.join(',') + ']';
   }
 };
 ASTCompiler.prototype.escape = function (value) {
