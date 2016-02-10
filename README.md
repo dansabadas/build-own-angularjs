@@ -11,7 +11,11 @@ http://www.bradoncode.com/blog/2015/05/19/karma-angularjs-testing/
 simply run: npm install in NodeJS npm console
 
 3. AngularJS further specific documantation
-equals function: https://github.com/angular/angular.js/blob/8d4e3fdd31eabadd87db38aa0590253e14791956/src/Angular.js#L812
-deep cppy function https://github.com/angular/angular.js/blob/8d4e3fdd31eabadd87db38aa0590253e14791956/src/Angular.js#L725
+equals and deep cppy function: https://github.com/angular/angular.js/blob/8d4e3fdd31eabadd87db38aa0590253e14791956/src/Angular.js#L812
 
-arrived at Chapter 6 - Lookup And Function Call Expressions - Ensuring Safety In Member Access pg 243
+1. http://jasmine.github.io/2.0/introduction.html#section-Spies
+2. http://alistapart.com/article/getoutbindingsituations
+3. http://benmccormick.org/2014/11/12/underscore-vs-lodash/
+4. 
+
+arrived at Chapter 7 Operator Expressions 261
