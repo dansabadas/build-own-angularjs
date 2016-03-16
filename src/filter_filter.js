@@ -2,7 +2,7 @@
 
 var _ = require('lodash');
 
-function deepCompare(actual, expected, comparator, matchAnyProperty) {
+function deepCompare(actual, expected, comparator, matchAnyProperty, inWildcard) {
   if (_.isString(expected) && _.startsWith(expected, '!')) {
     return !deepCompare(actual, expected.substring(1), comparator, matchAnyProperty);
   }
@@ -12,7 +12,7 @@ function deepCompare(actual, expected, comparator, matchAnyProperty) {
     });
   }
   if (_.isObject(actual)) {
-    if (_.isObject(expected)) {
+    if (_.isObject(expected) && !inWildcard) {
       return _.every(
         _.toPlainObject(expected),
         function (expectedVal, expectedKey) {
@@ -21,7 +21,7 @@ function deepCompare(actual, expected, comparator, matchAnyProperty) {
           }
           var isWildcard = (expectedKey === '$');
           var actualVal = isWildcard ? actual : actual[expectedKey];
-          return deepCompare(actualVal, expectedVal, comparator, isWildcard);
+          return deepCompare(actualVal, expectedVal, comparator, isWildcard, isWildcard);
         }
       );
     } else if (matchAnyProperty) {
@@ -37,6 +37,9 @@ function deepCompare(actual, expected, comparator, matchAnyProperty) {
 }
 
 function createPredicateFn(expression) {
+  var shouldMatchPrimitives =
+    _.isObject(expression) && ('$' in expression);
+
   function comparator(actual, expected) {
     if (_.isUndefined(actual)) {
       return false;
@@ -49,6 +52,9 @@ function createPredicateFn(expression) {
     return actual.indexOf(expected) !== -1;
   }
   return function predicateFn(item) {
+    if (shouldMatchPrimitives && !_.isObject(item)) {
+      return deepCompare(item, expression.$, comparator);
+    }
     return deepCompare(item, expression, comparator, true);
   };
 }

@@ -249,4 +249,20 @@ describe("filter filter", function () {
     { name: { first: 'Mary', last: 'Brown' }, role: 'admin' }
     ]);
   });
+  it('filters primitives with a wildcard property', function () {
+    var fn = parse('arr | filter:{$: "o"}');
+    expect(fn({ arr: ['Joe', 'Jane', 'Mary'] })).toEqual(['Joe']);
+  });
+  it('filters with a nested wildcard property', function () {
+    var fn = parse('arr | filter:{$: {$: "o"}}');
+    expect(fn({
+      arr: [
+      { name: { first: 'Joe' }, role: 'admin' },
+      { name: { first: 'Jane' }, role: 'moderator' },
+      { name: { first: 'Mary' }, role: 'admin' }
+      ]
+    })).toEqual([
+    { name: { first: 'Joe' }, role: 'admin' }
+    ]);
+  });
 });
