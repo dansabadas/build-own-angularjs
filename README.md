@@ -18,4 +18,4 @@ equals and deep cppy function: https://github.com/angular/angular.js/blob/8d4e3f
 3. http://benmccormick.org/2014/11/12/underscore-vs-lodash/
 4. 
 
-arrived at Chapter 9 Expressions And Watches
+arrived at Chapter 9 Expressions And Watches p 339 - Literal And Constant Expressions
